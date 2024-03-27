@@ -1,0 +1,48 @@
+package com.example.workflow;
+
+import com.adobe.granite.asset.api.Asset;
+import com.adobe.granite.asset.api.AssetManager;
+import com.adobe.granite.workflow.WorkflowException;
+import com.adobe.granite.workflow.WorkflowSession;
+import com.adobe.granite.workflow.exec.WorkItem;
+import com.adobe.granite.workflow.exec.WorkflowProcess;
+import com.adobe.granite.workflow.metadata.MetaDataMap;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.framework.Constants;
+
+@Component(service = WorkflowProcess.class, property = {
+        Constants.SERVICE_DESCRIPTION + "=Custom Asset Size Check Workflow Step",
+        "process.label=Asset Size Check"
+})
+public class AssetSizeCheckStep implements WorkflowProcess {
+
+    @Override
+    public void execute(WorkItem workItem, WorkflowSession workflowSession, MetaDataMap metaDataMap)
+            throws WorkflowException {
+        // Get the resource resolver
+        ResourceResolver resolver = workflowSession.adaptTo(ResourceResolver.class);
+
+        // Get the asset path from the workflow payload
+        String assetPath = (String) workItem.getWorkflowData().getPayload();
+
+        try {
+            // Get the asset
+            AssetManager assetManager = resolver.adaptTo(AssetManager.class);
+            Asset asset = assetManager.getAsset(assetPath);
+
+            // Get the configured maximum asset size
+            int maxAssetSizeMB = Integer.parseInt(metaDataMap.get("maxAssetSize", "30"));
+            long maxSizeBytes = maxAssetSizeMB * 1024 * 1024;
+
+            // Check if asset size exceeds the limit
+            if (asset.getSize() > maxSizeBytes) {
+                // If size exceeds limit, fail the workflow
+                workflowSession.terminateWorkflow(workItem.getWorkflow());
+                throw new WorkflowException("Asset size exceeds the limit of " + maxAssetSizeMB + " MB");
+            }
+        } catch (Exception e) {
+            throw new WorkflowException("Error processing asset size check", e);
+        }
+    }
+}
