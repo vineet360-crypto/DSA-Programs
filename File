@@ -1,0 +1,53 @@
+<div class="quiz">
+    <h2>Quiz</h2>
+    <div class="question" data-question="1">
+        <p>What is the capital of France?</p>
+        <input type="radio" name="q1" value="Paris"> Paris<br>
+        <input type="radio" name="q1" value="London"> London<br>
+        <input type="radio" name="q1" value="Berlin"> Berlin<br>
+    </div>
+    <div class="question" data-question="2">
+        <p>What is the largest planet in our solar system?</p>
+        <input type="radio" name="q2" value="Mars"> Mars<br>
+        <input type="radio" name="q2" value="Jupiter"> Jupiter<br>
+        <input type="radio" name="q2" value="Venus"> Venus<br>
+    </div>
+    <div class="question" data-question="3">
+        <p>What is the capital of Japan?</p>
+        <input type="radio" name="q3" value="Tokyo"> Tokyo<br>
+        <input type="radio" name="q3" value="Seoul"> Seoul<br>
+        <input type="radio" name="q3" value="Beijing"> Beijing<br>
+    </div>
+    <button id="submitQuiz">Submit</button>
+    <div id="quizResult"></div>
+</div>
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    var submitBtn = document.getElementById("submitQuiz");
+    submitBtn.addEventListener("click", calculateScore);
+});
+
+function calculateScore() {
+    var totalQuestions = 3;
+    var score = 0;
+
+    for (var i = 1; i <= totalQuestions; i++) {
+        var selectedOption = document.querySelector('input[name="q' + i + '"]:checked');
+        if (selectedOption) {
+            if (selectedOption.value === "correct answer") {
+                score++;
+            }
+        }
+    }
+
+    displayScore(score, totalQuestions);
+}
+
+function displayScore(score, totalQuestions) {
+    var resultContainer = document.getElementById("quizResult");
+    var percentage = (score / totalQuestions) * 100;
+    var message = "You scored " + score + " out of " + totalQuestions + ". ";
+    message += "Your percentage is " + percentage + "%.";
+    resultContainer.innerText = message;
+}
