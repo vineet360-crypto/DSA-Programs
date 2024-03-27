@@ -203,3 +203,38 @@ public class AssetSizeCheckStep implements WorkflowProcess {
 }
 
 
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.framework.Constants;
+
+@Component(service = YourComponent.class, immediate = true)
+public class YourComponent {
+
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
+
+    public void yourMethod() {
+        ResourceResolver resourceResolver = null;
+        try {
+            // Service user mapping (change "your-service-user" to your actual service user name)
+            final Map<String, Object> serviceUser = new HashMap<>();
+            serviceUser.put(ResourceResolverFactory.SUBSERVICE, "your-service-user");
+            
+            // Get a resource resolver
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(serviceUser);
+            
+            // Use the resource resolver as needed
+            // For example: Resource resource = resourceResolver.getResource("/path/to/resource");
+        } catch (LoginException e) {
+            // Handle login exception
+        } finally {
+            // Always close the resource resolver when done
+            if (resourceResolver != null) {
+                resourceResolver.close();
+            }
+        }
+    }
+}
+
