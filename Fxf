@@ -83,3 +83,59 @@ submitButton.addEventListener("click", () => {
     showQuestion();
     submitButton.style.display = "none";
 });
+
+
+
+
+
+
+package com.example.workflow;
+
+import com.adobe.granite.workflow.WorkflowException;
+import com.adobe.granite.workflow.WorkflowSession;
+import com.adobe.granite.workflow.exec.WorkItem;
+import com.adobe.granite.workflow.exec.WorkflowProcess;
+import com.adobe.granite.workflow.metadata.MetaDataMap;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.framework.Constants;
+
+@Component(service = WorkflowProcess.class, property = {
+        Constants.SERVICE_DESCRIPTION + "=Custom Asset Size Check Workflow Step",
+        "process.label=Asset Size Check"
+})
+public class AssetSizeCheckStep implements WorkflowProcess {
+
+    @Override
+    public void execute(WorkItem workItem, WorkflowSession workflowSession, MetaDataMap metaDataMap)
+            throws WorkflowException {
+        // Get the resource resolver
+        ResourceResolver resolver = workflowSession.adaptTo(ResourceResolver.class);
+
+        // Get the asset path from the workflow payload
+        String assetPath = (String) workItem.getWorkflowData().getPayload();
+
+        try {
+            // Get the asset resource
+            Resource assetResource = resolver.getResource(assetPath);
+
+            // Get the size property of the asset
+            long assetSize = assetResource.getValueMap().get("jcr:content/jcr:data").length();
+
+            // Get the configured maximum asset size
+            int maxAssetSizeMB = Integer.parseInt(metaDataMap.get("maxAssetSize", "30"));
+            long maxSizeBytes = maxAssetSizeMB * 1024 * 1024;
+
+            // Check if asset size exceeds the limit
+            if (assetSize > maxSizeBytes) {
+                // If size exceeds limit, fail the workflow
+                workflowSession.terminateWorkflow(workItem.getWorkflow());
+                throw new WorkflowException("Asset size exceeds the limit of " + maxAssetSizeMB + " MB");
+            }
+        } catch (Exception e) {
+            throw new WorkflowException("Error processing asset size check", e);
+        }
+    }
+}
+
