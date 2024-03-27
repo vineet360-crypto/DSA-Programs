@@ -1,0 +1,182 @@
+package com.example.listeners;
+
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.event.jobs.JobManager;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
+
+@Component(immediate = true, service = EventHandler.class,
+           property = { "event.topics=" + SlingConstants.TOPIC_RESOURCE_ADDED })
+public class AssetUploadEventListener implements EventHandler {
+
+    @Reference
+    private JobManager jobManager;
+
+    @Activate
+    protected void activate() {
+        // Register the event handler
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        // Check if the event is related to an asset upload
+        if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic())) {
+            // Get the path of the uploaded resource
+            String resourcePath = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+
+            // Check if the uploaded resource is an asset
+            if (isAsset(resourcePath)) {
+                // Retrieve the size of the uploaded asset
+                long assetSize = getAssetSize(resourcePath);
+
+                // Check if the asset size exceeds the limit (e.g., 30MB)
+                if (assetSize > 30 * 1024 * 1024) {
+                    // If the asset size exceeds the limit, take appropriate action
+                    // For example, log a message or trigger a workflow
+                    // You can also reject the upload by deleting the asset
+                    // Here, we simply log a message for demonstration purposes
+                    System.out.println("Asset upload rejected: Size exceeds limit.");
+                }
+            }
+        }
+    }
+
+    private boolean isAsset(String resourcePath) {
+        // Implement logic to check if the resource at the given path is an asset
+        // You can use JCR API or Sling Resource API to determine the resource type
+        // For example:
+        // ResourceResolver resolver = getResourceResolver(); // Get a resource resolver
+        // return resolver.getResource(resourcePath).isResourceType("dam:Asset");
+        return true; // For demonstration purposes, assuming all uploads are assets
+    }
+
+    private long getAssetSize(String assetPath) {
+        // Implement logic to retrieve the size of the asset at the given path
+        // For example:
+        // AssetManager assetManager = getAssetManager(); // Get an asset manager
+        // Asset asset = assetManager.getAsset(assetPath);
+        // return asset.getSize();
+        return 0; // For demonstration purposes, returning 0
+    }
+
+    // Helper methods to get ResourceResolver and AssetManager
+    // Implement these methods based on your AEM project structure
+
+    // private ResourceResolver getResourceResolver() { ... }
+    // private AssetManager getAssetManager() { ... }
+}
+
+
+
+private boolean isAsset(String resourcePath) {
+    // Get the resource resolver
+    ResourceResolver resolver = getResourceResolver();
+
+    try {
+        // Get the resource at the specified path
+        Resource resource = resolver.getResource(resourcePath);
+
+        // Check if the resource exists and if it's of type dam:Asset
+        if (resource != null && "dam:Asset".equals(resource.getResourceType())) {
+            return true;
+        }
+    } finally {
+        // Always close the resource resolver when done
+        resolver.close();
+    }
+
+    return false;
+}
+
+private long getAssetSize(String assetPath) {
+    // Get the resource resolver
+    ResourceResolver resolver = getResourceResolver();
+
+    try {
+        // Get the resource at the specified asset path
+        Resource assetResource = resolver.getResource(assetPath);
+
+        if (assetResource != null) {
+            // Get the asset's metadata node
+            Node metadataNode = assetResource.adaptTo(Node.class).getNode("jcr:content/metadata");
+
+            // Retrieve the size property from the metadata
+            Property sizeProperty = metadataNode.getProperty("dam:size");
+            
+            // Return the size value
+            return sizeProperty.getLong();
+        }
+    } catch (RepositoryException e) {
+        // Handle any exceptions
+        e.printStackTrace();
+    } finally {
+        // Always close the resource resolver when done
+        resolver.close();
+    }
+
+    // Return 0 if the asset size cannot be retrieved
+    return 0;
+}
+
+
+
+
+private long getAssetSize(String assetPath) {
+    // Get the resource resolver
+    ResourceResolver resolver = getResourceResolver();
+
+    try {
+        // Get the resource at the specified asset path
+        Resource assetResource = resolver.getResource(assetPath);
+
+        if (assetResource != null) {
+            // Get the asset's metadata node
+            Node metadataNode = assetResource.adaptTo(Node.class).getNode("jcr:content/metadata");
+
+            // Retrieve the size property from the metadata
+            Property sizeProperty = metadataNode.getProperty("dam:size");
+            
+            // Return the size value
+            return sizeProperty.getLong();
+        }
+    } catch (RepositoryException e) {
+        // Handle any exceptions
+        e.printStackTrace();
+    } finally {
+        // Always close the resource resolver when done
+        resolver.close();
+    }
+
+    // Return 0 if the asset size cannot be retrieved
+    return 0;
+}
+
+if (assetSize > 30 * 1024 * 1024) {
+    // If the asset size exceeds the limit (30MB in this case)
+    // Here are some possible actions you can take:
+    
+    // 1. Log a message
+    log.info("Asset upload rejected: Size exceeds limit.");
+
+    // 2. Trigger a workflow
+    // You can initiate a workflow to handle the oversized asset.
+    // For example:
+    // workflowService.startWorkflow(workflowModelPath, workflowPayload);
+
+    // 3. Delete the asset
+    // You can delete the oversized asset to prevent it from being stored.
+    // For example:
+    // resourceResolver.delete(assetResource);
+
+    // 4. Notify user
+    // You can notify the user that their upload was rejected due to size limit exceeded.
+    // For example:
+    // notificationService.notifyUser("Asset upload rejected: Size exceeds limit.");
+
+    // Choose the appropriate action based on your requirements.
+}
+
