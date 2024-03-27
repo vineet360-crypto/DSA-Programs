@@ -1,0 +1,73 @@
+package com.example.aem.workflow;
+
+import com.adobe.granite.asset.api.Asset;
+import com.adobe.granite.asset.api.AssetManager;
+import com.adobe.granite.asset.api.Rendition;
+import com.adobe.granite.asset.api.AssetException;
+import com.adobe.granite.asset.api.AssetHandler;
+import com.adobe.granite.asset.api.AssetUploadResult;
+import com.adobe.granite.asset.api.AssetUploadParams;
+import com.adobe.granite.asset.api.AssetUploadSession;
+import com.adobe.granite.asset.api.AssetUploadSessionException;
+import com.adobe.granite.asset.api.AssetUploadSessionStatus;
+import com.adobe.granite.asset.api.commons.AssetTypes;
+import com.adobe.granite.workflow.WorkflowException;
+import com.adobe.granite.workflow.WorkflowSession;
+import com.adobe.granite.workflow.exec.WorkItem;
+import com.adobe.granite.workflow.exec.WorkflowProcess;
+import com.adobe.granite.workflow.metadata.MetaDataMap;
+import org.apache.commons.lang3.StringUtils;
+import org.osgi.service.component.annotations.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.Session;
+import java.io.InputStream;
+
+@Component(
+    service = WorkflowProcess.class,
+    property = {
+        "process.label=Custom Asset Size Check"
+    }
+)
+public class CustomAssetSizeCheck implements WorkflowProcess {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomAssetSizeCheck.class);
+    private static final long MAX_FILE_SIZE_BYTES = 30 * 1024 * 1024; // 30 MB
+
+    @Override
+    public void execute(WorkItem workItem, WorkflowSession workflowSession, MetaDataMap metaDataMap) throws WorkflowException {
+        // Get the asset path from the workflow metadata
+        String assetPath = metaDataMap.get("assetPath", String.class);
+        if (StringUtils.isNotBlank(assetPath)) {
+            try {
+                // Get the asset manager from the workflow session
+                AssetManager assetManager = workflowSession.adaptTo(AssetManager.class);
+                if (assetManager != null) {
+                    // Get the asset by path
+                    Asset asset = assetManager.getAsset(assetPath);
+                    if (asset != null) {
+                        // Get the primary rendition
+                        Rendition rendition = asset.getOriginal();
+                        if (rendition != null) {
+                            // Check the size of the rendition
+                            long fileSize = rendition.getSize();
+                            if (fileSize > MAX_FILE_SIZE_BYTES) {
+                                throw new WorkflowException("Asset size exceeds the limit of 30 MB.");
+                            }
+                        }
+                    } else {
+                        throw new WorkflowException("Asset not found at path: " + assetPath);
+                    }
+                } else {
+                    throw new WorkflowException("Asset manager is null.");
+                }
+            } catch (AssetException | WorkflowException e) {
+                LOGGER.error("Error checking asset size: {}", e.getMessage());
+                throw new WorkflowException("Error checking asset size.", e);
+            }
+        } else {
+            throw new WorkflowException("Asset path is blank.");
+        }
+    }
+}
