@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+</head>
+<body>
+    <h1>Quiz</h1>
+    <div id="quiz-container">
+        <div id="question-container"></div>
+        <div id="options-container"></div>
+        <button id="submit-btn">Submit</button>
+        <div id="result-container"></div>
+    </div>
+
+    <script src="quiz.js"></script>
+</body>
+</html>
+
+const quizData = [
+    {
+        question: "What is the capital of France?",
+        options: ["Paris", "London", "Berlin", "Madrid"],
+        correctAnswer: "Paris"
+    },
+    {
+        question: "Who wrote 'Romeo and Juliet'?",
+        options: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"],
+        correctAnswer: "William Shakespeare"
+    },
+    {
+        question: "What is the largest planet in our solar system?",
+        options: ["Earth", "Jupiter", "Saturn", "Mars"],
+        correctAnswer: "Jupiter"
+    }
+];
+
+const quizContainer = document.getElementById("quiz-container");
+const questionContainer = document.getElementById("question-container");
+const optionsContainer = document.getElementById("options-container");
+const resultContainer = document.getElementById("result-container");
+const submitButton = document.getElementById("submit-btn");
+
+let currentQuestionIndex = 0;
+let score = 0;
+
+function showQuestion() {
+    const currentQuestion = quizData[currentQuestionIndex];
+    questionContainer.innerText = currentQuestion.question;
+    
+    optionsContainer.innerHTML = "";
+    currentQuestion.options.forEach((option, index) => {
+        const optionElement = document.createElement("button");
+        optionElement.innerText = option;
+        optionElement.addEventListener("click", () => {
+            checkAnswer(option);
+        });
+        optionsContainer.appendChild(optionElement);
+    });
+}
+
+function checkAnswer(selectedOption) {
+    const currentQuestion = quizData[currentQuestionIndex];
+    if (selectedOption === currentQuestion.correctAnswer) {
+        score++;
+    }
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) {
+        showQuestion();
+    } else {
+        showResult();
+    }
+}
+
+function showResult() {
+    quizContainer.style.display = "none";
+    resultContainer.innerHTML = `You scored ${score} out of ${quizData.length}.`;
+    resultContainer.style.display = "block";
+}
+
+submitButton.addEventListener("click", () => {
+    showQuestion();
+    submitButton.style.display = "none";
+});
