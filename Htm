@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Quiz</title>
+</head>
+<body>
+  <h1>Custom Quiz</h1>
+  <div id="quiz-container">
+    <div id="questions-container"></div>
+    <button onclick="addQuestion()">Add Question</button>
+    <button onclick="submitQuiz()">Submit Quiz</button>
+  </div>
+
+  <script src="quiz.js"></script>
+</body>
+</html>
+
+
+
+
+// Array to store quiz questions and answers
+let quizData = [];
+
+// Function to add a new question input field
+function addQuestion() {
+  const questionInput = prompt("Enter your question:");
+  if (questionInput) {
+    const answerInput = prompt("Enter the answer:");
+    if (answerInput) {
+      quizData.push({ question: questionInput, answer: answerInput });
+      displayQuestions();
+    } else {
+      alert("Answer cannot be empty.");
+    }
+  } else {
+    alert("Question cannot be empty.");
+  }
+}
+
+// Function to display added questions
+function displayQuestions() {
+  const questionsContainer = document.getElementById("questions-container");
+  questionsContainer.innerHTML = "";
+  quizData.forEach((item, index) => {
+    const questionDiv = document.createElement("div");
+    questionDiv.textContent = `Q${index + 1}: ${item.question}`;
+    questionsContainer.appendChild(questionDiv);
+  });
+}
+
+// Function to submit the quiz
+function submitQuiz() {
+  // You can add logic here to handle quiz submission
+  console.log("Quiz submitted:", quizData);
+}
+
+
